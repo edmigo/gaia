@@ -1,0 +1,21 @@
+# working only with python 3.11
+streamlit
+streamlit_option_menu
+streamlit_text_rating
+requests
+tiktoken
+streamlit_feedback
+huggingface_hub
+llama_index
+openai
+transformers
+torch
+pypdf
+ldap3
+docx2txt
+xlrd
+openpyxl
+accelerate
+safetensors
+Pydantic
+pymongo
