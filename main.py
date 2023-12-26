@@ -398,7 +398,7 @@ with st.sidebar:
 
     image_url = 'GAIA_black.png'
     image = Image.open(image_url)
-    st.image(image)
+    #st.image(image)
 
     original_title = '<p style="font-family:prometo trial; color:white; font-size: 20px; font-weight: bold; ">Model Settings</p>'
     st.markdown(original_title, unsafe_allow_html=True)
