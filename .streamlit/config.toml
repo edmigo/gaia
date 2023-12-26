@@ -1,0 +1,7 @@
+[theme]
+base = "dark"
+primaryColor="green"
+backgroundColor="#f5f6f9"     # background color for main screem
+secondaryBackgroundColor="#050f20"
+textColor="#155cea" #textColor="#0b1cee"
+font="serif"
