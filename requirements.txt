@@ -19,3 +19,4 @@ accelerate
 safetensors
 Pydantic
 pymongo
+pillow
