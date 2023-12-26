@@ -41,8 +41,8 @@ from llama_index.llms.llama_utils import (
 
 import time
 # print(os.getcwd())
-from utils import gaia_api
-from utils import gaia_utils
+import gaia_api
+import gaia_utils
 
 from tempfile import NamedTemporaryFile
 import os
