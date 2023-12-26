@@ -386,7 +386,10 @@ def _submit_feedback(user_response, emoji=None):
 #######################################
 with st.sidebar:
     ip = getip.get_remote_ip()
-    username = getip.GetUserName(ip)
+    if type(ip) == str:
+        username = getip.GetUserName(ip)
+    else:
+        username = 'root'
 
     if "file_uploader_key" not in st.session_state.keys():
         st.session_state["file_uploader_key"] = gaia_utils.FILE_UPLOAD_KEY
