@@ -441,7 +441,7 @@ with st.sidebar:
     username = getip.GetUserName(ip)
 
     creativity_inst = st.select_slider(':blue[Creativity]', options=['Precise', 'Balanced', 'Creative'])
-    prev_topics = gaia_api.prev_topics.get(username, [])
+    prev_topics = gaia_api.prev_topics
     if len(prev_topics) > 0:
         original_title = '<p style="font-family:prometo trial; color:white; font-size: 20px; font-weight: bold; ">Previous Chats</p>'
         #st.markdown(original_title, unsafe_allow_html=True)
