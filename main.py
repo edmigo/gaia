@@ -438,7 +438,10 @@ with st.sidebar:
     
     #username = getpass.getuser()
     ip = getip.get_remote_ip()
-    username = getip.GetUserName(ip)
+    if type(ip) == str:
+        username = getip.GetUserName(ip)
+    else:
+        username = 'root'
 
     creativity_inst = st.select_slider(':blue[Creativity]', options=['Precise', 'Balanced', 'Creative'])
     prev_topics = gaia_api.prev_topics
