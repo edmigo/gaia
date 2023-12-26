@@ -20,3 +20,4 @@ safetensors
 Pydantic
 pymongo
 pillow
+image
