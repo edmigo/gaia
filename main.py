@@ -371,8 +371,10 @@ def SaveIndex():
 prompt = st.chat_input(placeholder="Enter your message here...", max_chars=2000)
 
 with st.sidebar:
-    ip = getip.get_remote_ip()
-    username = getip.GetUserName(ip)
+    #ip = getip.get_remote_ip()
+    ip = '1'
+    #username = getip.GetUserName(ip)
+    username = 'admin'
     gaia_utils.UserIP = ip
     gaia_utils.UserID = username
 
