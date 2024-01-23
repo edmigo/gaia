@@ -1,4 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
+/* Importing fonts */
+<style>
+/*@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Lato:wght@400;700&display=swap');*/
+@import url('https://fonts.cdnfonts.com/css2?family=Prometo-Trial:wght@400;700&family=Lato:wght@400;700&display=swap');
+/*@import url('https://fonts.cdnfonts.com/css/Prometo-Trial');*/
 
 html, body, [class*="css"] {
     font-family: 'Roboto', sans-serif;
@@ -6,3 +10,91 @@ html, body, [class*="css"] {
     font-weight: 500;
     color: #091747;
 }
+
+/*text: Select a model*/
+.st-emotion-cache-fgv9oe {
+/*.st-emotion-cache-fgv9oe {*/
+    color: white;
+    font-size: 28px;
+    font-family: prometo trial;
+}
+
+/* text: Drag and drop files here */
+.st-emotion-cache-g0hcrl {
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    padding: 1rem;
+    background-color: rgb(245, 246, 249);
+    border-radius: 0.5rem;
+    font-family: prometo trial;
+    color: black;
+}
+
+/*text: Limit 200MB per file*/
+.st-emotion-cache-je3voc {
+    color: black;
+    font-family: prometo trial;
+    font-size: 14px;
+    line-height: 1.25;
+}
+
+/* button: Browse files */
+.st-emotion-cache-1l03nra {
+    display: inline-flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    font-weight: 400;
+    font-family: Prometo Trial;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    min-height: 38.4px;
+    margin: 0px;
+    line-height: 1.6;
+    width: 100%;
+    user-select: none;
+    background-color: green;
+    color: rgb(255, 255, 255);
+    border: 1px solid green;
+}
+
+/*button: Start new chat*/
+.st-emotion-cache-e3bbw0 {
+    display: inline-flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    font-weight: 400;
+    font-family: Prometo Trial;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    min-height: 38.4px;
+    margin: 0px;
+    line-height: 1.6;
+    width: 100%;
+    user-select: none;
+    background-color: green;
+    color: rgb(255, 255, 255);
+    border: 1px solid green;
+}
+
+.st-emotion-cache-hmrvu9{
+    background: black;
+}
+
+/*Creative gride*/
+.st-emotion-cache-z05kn0{
+    color: lime;
+    font-family: "Prometo Trial";
+}
+
+/*type of creative*/
+.st-emotion-cache-18rgja{
+    color: blue;
+    font-family: "Prometo Trial";
+}
+
+</style>

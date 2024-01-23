@@ -10,6 +10,7 @@ import getpass
 from streamlit_feedback import streamlit_feedback
 from PIL import Image
 import base64
+import MongoDB as md
 
 from huggingface_hub import InferenceClient
 
@@ -45,7 +46,7 @@ from utils import gaia_api
 from utils import gaia_utils
 
 from tempfile import NamedTemporaryFile
-import os
+import os, datetime
 
 from os import listdir
 from os.path import isfile, join
@@ -135,17 +136,6 @@ def WriteGreeting(prompt):
     full_prompt = gaia_utils.llama_v2_prompt(pre_prompt)
     print(full_prompt)
 
-    # now fill the message into the chat history above
-    #st.chat_message("user").write(prompt)
-
-    #i =+ 1
-    #streamlit_feedback(
-    #    feedback_type="thumbs",
-    #    optional_text_label="[Optional] Please provide an explanation",
-    #    key = str(i),
-    #    on_submit=gaia_api.provide_feedback
-    #)
-
     client = InferenceClient(URI)
 
     # Display assistant response in chat message container
@@ -206,75 +196,48 @@ def load_data_from_file(uploaded_file):
         embed_model = HuggingFaceEmbedding(model_name="jinaai/jina-embeddings-v2-base-en")
         print(f"loaded embedding! {time.time()}")
 
-    qnt = len(uploaded_file)
-    for upload_file in uploaded_file:
-        mysuffix = '.' + upload_file.name.split('.')[-1]
-        with NamedTemporaryFile(dir='.', delete=False, suffix='.' + upload_file.name.split('.')[-1]) as f:
-            f.write(upload_file.getbuffer())
-            print(upload_file.name + ' is uploaded now')
-            if '.xls' in mysuffix:
-                print('Go to convert Excel file to text file...')
-                myname = ConvertExcelToTxt(f.name)
-                newuploadname = upload_file.name.split('.')
-                shutil.copy(myname, DataPath + '//' + newuploadname[0] + '.txt')
-                os.remove(myname)
-            else:
-                shutil.copy(f.name, DataPath + '//' + upload_file.name)
-            # docs = reader.load_data()
-        name = f.name.split('\\')
-        os.remove(name[len(name) - 1])
+        qnt = len(uploaded_file)
+        for upload_file in uploaded_file:
+            mysuffix = '.' + upload_file.name.split('.')[-1]
+            with NamedTemporaryFile(dir='.', delete=False, suffix='.' + upload_file.name.split('.')[-1]) as f:
+                f.write(upload_file.getbuffer())
+                print(upload_file.name + ' is uploaded now')
+                if '.xls' in mysuffix:
+                    print('Go to convert Excel file to text file...')
+                    myname = ConvertExcelToTxt(f.name)
+                    newuploadname = upload_file.name.split('.')
+                    shutil.copy(myname, DataPath + '//' + newuploadname[0] + '.txt')
+                    os.remove(myname)
+                else:
+                    shutil.copy(f.name, DataPath + '//' + upload_file.name)
+                # docs = reader.load_data()
+            name = f.name.split('\\')
+            os.remove(name[len(name) - 1])
 
-    reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
-    docs = reader.load_data()
+        reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
+        docs = reader.load_data()
 
-    # with st.spinner(text="Loading index"):
-    #     print(f"reading file {time.time()}")
-    #     if upload_file:
-    #         # load the data from memory without storing it in disk
-    #         mysuffix = '.' + upload_file.name.split('.')[-1]
-    #         with NamedTemporaryFile(dir='.',delete=False, suffix='.' + upload_file.name.split('.')[-1]) as f:
-    #             f.write(upload_file.getbuffer())
-    #             reader = SimpleDirectoryReader(input_files=[f.name])
-    #             print(f.name)
-    #             docs = reader.load_data()
-    #         os.remove(f.name)
-    #     else:
-    #         reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
-    #         docs = reader.load_data()
+        print(f"loading index {time.time()}")
+        #service_context = ServiceContext.from_defaults(chunk_size=1024, llm=llm, embed_model="local")
+        service_context = ServiceContext.from_defaults(llm=None, embed_model=embed_model)
 
-    print(f"loading index {time.time()}")
-    #service_context = ServiceContext.from_defaults(chunk_size=1024, llm=llm, embed_model="local")
-    service_context = ServiceContext.from_defaults(llm=None, embed_model=embed_model)
-
-    #RemoveIndex()
-    # # delete previouse index and nodes
-    # if gaia_utils.INDEX != '':
-    #     gaia_utils.INDEX.delete_ref_doc(ref_doc_id=gaia_utils.DOC_ID)
-    #     gaia_utils.NODES_ID = []
-    #     if "retriever_engine" in st.session_state.keys():
-    #         st.session_state.pop('retriever_engine')
-    #if len(st.session_state.messages) > 0:
-    #    st.session_state.messages.clear()
-
-    st.session_state.messages.clear()
-    index = VectorStoreIndex.from_documents(docs, service_context=service_context)
-    #ShowPopUpWindows()
-    index.storage_context.persist(persist_dir='VDB\\MSDS-Docs')
-    gaia_utils.DOC_ID.clear()
-    gaia_utils.NODES_ID.clear()
-    for doc in docs:
-        gaia_utils.DOC_ID.append(doc.doc_id)
-    gaia_utils.INDEX_ID = index.index_id
-    for key, value in index.docstore.docs.items():
-        gaia_utils.NODES_ID.append(key)
-    gaia_utils.INDEX = index
-    # index.storage_context.persist("./" + upload_file.name )
-    TotalTime = round(time.time() - StartEmbedding, 1)
-    print(f"index created in {TotalTime} sec.")
-    if "retriever_engine" not in st.session_state.keys(): # Initialize the chat engine
-        st.session_state.retriever_engine = index.as_retriever(verbose=True)
-
-    #st.cache_resource.clear()
+        st.session_state.messages.clear()
+        index = VectorStoreIndex.from_documents(docs, service_context=service_context)
+        #ShowPopUpWindows()
+        index.storage_context.persist(persist_dir='VDB\\MSDS-Docs')
+        gaia_utils.DOC_ID.clear()
+        gaia_utils.NODES_ID.clear()
+        for doc in docs:
+            gaia_utils.DOC_ID.append(doc.doc_id)
+        gaia_utils.INDEX_ID = index.index_id
+        for key, value in index.docstore.docs.items():
+            gaia_utils.NODES_ID.append(key)
+        gaia_utils.INDEX = index
+        # index.storage_context.persist("./" + upload_file.name )
+        TotalTime = round(time.time() - StartEmbedding, 1)
+        print(f"index created in {TotalTime} sec.")
+        if "retriever_engine" not in st.session_state.keys(): # Initialize the chat engine
+            st.session_state.retriever_engine = index.as_retriever(verbose=True)
 
     return index
 
@@ -356,7 +319,7 @@ def initialize_session_state():
 
 def click_button():
     #RemoveIndex()
-    gaia_api.prev_topics.clear()
+    gaia_api.prev_topics[model_sel] = md.GetStoreMsgFromModel(model_sel, username)
     gaia_utils.MyModelHistory.clear()
     if gaia_utils.INDEX != '':
         st.cache_resource.clear()
@@ -375,70 +338,122 @@ def click_button():
         for file in os.listdir(DataPath):
             os.remove(DataPath + '//' + file)
         print('delete previouse index and nodes')
+    else:
+        st.session_state.clear()
     print('Pressed button...')
 
 def _submit_feedback(user_response, emoji=None):
+    print('_submit_feedback')
     st.toast(f"Feedback submitted: {user_response}", icon=emoji)
     return user_response.update({"some metadata": 123})
+
+def SaveIndex():
+    if 'SaveIndex' in st.session_state.keys():
+        index = st.session_state["SaveIndex"]
+        myVector = gaia_utils.VerctorsByUser.get(gaia_utils.UserIP, gaia_utils.VECTORS)
+        myVec = []
+        if index not in myVector:
+            myVec = myVector.copy()
+            myVec.append(index)
+            gaia_utils.VerctorsByUser[gaia_utils.UserIP] = myVec
+        p = Path('VDB' + '//' + index)
+        if p.exists():
+            shutil.rmtree('VDB' + '//' + index)
+            shutil.copytree('VDB/MSDS-Docs', 'VDB' + '/' + index)
+        else:
+            shutil.copytree('VDB/MSDS-Docs', 'VDB' + '/' + index)
+
+        print(index)
 
 # design section - sidebar definition and selections
 # Here is start!
 #######################################
+prompt = st.chat_input(placeholder="Enter your message here...", max_chars=2000)
+
 with st.sidebar:
     ip = getip.get_remote_ip()
-    if type(ip) == str:
-        username = getip.GetUserName(ip)
-    else:
-        username = 'root'
+    username = getip.GetUserName(ip)
+    gaia_utils.UserIP = ip
+    gaia_utils.UserID = username
 
     if "file_uploader_key" not in st.session_state.keys():
         st.session_state["file_uploader_key"] = gaia_utils.FILE_UPLOAD_KEY
+    if "feedback_key" not in st.session_state:
+        st.session_state["feedback_key"] = 0
     if "uploaded_files" not in st.session_state.keys():
         st.session_state["uploaded_files"] = []
 
     image_url = 'GAIA_black.png'
-    #image = Image.open(image_url)
-    #st.image(image)
+    image = Image.open(image_url)
+    st.image(image)
 
     original_title = '<p style="font-family:prometo trial; color:white; font-size: 20px; font-weight: bold; ">Model Settings</p>'
     st.markdown(original_title, unsafe_allow_html=True)
     #st.header(':gray[_Model Settings_]', divider='green')
     model_opts = gaia_api.get_models()
-    vector_opts = gaia_api.get_vectors()
-    model_sel = st.selectbox(label=":blue[Select a model]",options=model_opts['names'])
+    vector_opts = gaia_utils.VerctorsByUser.get(gaia_utils.UserIP, gaia_utils.VECTORS)
+    model_sel = st.selectbox(label="Select a model",options=model_opts['names'])
 
-    if gaia_utils.MyModel != model_sel:
-        gaia_utils.MyModelHistory[gaia_utils.MyModel] = gaia_api.prev_topics
-        gaia_api.prev_topics = gaia_utils.MyModelHistory.get(model_sel, [])
+    if gaia_utils.MyModel.get(username, -1) != model_sel:
+        gaia_api.prev_topics[model_sel] = md.GetStoreMsgFromModel(model_sel, username)
+        #gaia_utils.MyModelHistory[gaia_utils.MyModel] = gaia_api.prev_topics[model_sel].get(username, [])
+        gaia_utils.MyModelHistory[model_sel] = gaia_api.prev_topics[model_sel].get(username, [])
+        gaia_api.prev_topics[model_sel][username] = gaia_utils.MyModelHistory.get(model_sel, [])
         if "messages" in st.session_state:
-            gaia_utils.MyModelHistoryMsg[gaia_utils.MyModel] = st.session_state.messages
+            gaia_utils.MyModelHistoryMsg[gaia_utils.MyModel[username]] = st.session_state.messages
             st.session_state.messages = gaia_utils.MyModelHistoryMsg.get(model_sel, [])
-        gaia_utils.MyModel = model_sel
+        gaia_utils.MyModel[username] = model_sel
+
+    if prompt:
+        mylst = gaia_api.prev_topics[model_sel].get(username, [])
+        mylst.append(prompt)
+        gaia_api.prev_topics[model_sel][username] = mylst
+        gaia_utils.MsgHistoryByModel[model_sel] = gaia_api.prev_topics[model_sel]
+        #md.InsertToDB(md.COLLECTION_HISTORY, gaia_utils.MsgHistoryByModel[model_sel], model_sel)
 
     model_URI = model_opts['URI'][model_opts['names'].index(model_sel)]
-    with st.expander(label=":blue[Additional Knowledge]", expanded=False):
-        vector_sel = st.selectbox(":blue[Knowledge base]", vector_opts)
+    with st.expander(label="Additional Knowledge", expanded=False):
+        vector_sel = st.selectbox("Knowledge base", vector_opts)
         if gaia_utils.VectorSelected != vector_sel and vector_sel != 'None':
             if does_file_exist_in_dir('VDB\\' + vector_sel):
                 load_persistent_data('VDB\\' + vector_sel)
         gaia_utils.VectorSelected = vector_sel
 
         uploaded_file = st.file_uploader(
-            ":blue[Upload a document]",
+            "Upload a document",
             accept_multiple_files=True,
             key=st.session_state["file_uploader_key"],
             type=("txt", "md", "docx", "pdf", "xls", "xlsx")
         )
+        if len(uploaded_file) > 0:
+            if 'SaveIndex' in st.session_state.keys():
+                index = st.session_state["SaveIndex"]
+                if index not in gaia_utils.VerctorsByUser.get(gaia_utils.UserIP, gaia_utils.VECTORS):
+                    save_index = st.text_input(label="Save INDEX by Name",
+                                               placeholder='Enter name of INDEX here...',
+                                               max_chars=50,
+                                               key='SaveIndex',
+                                               on_change=SaveIndex
+                                               )
+                else:
+                    title = "INDEX saved in: {index}".format(index=index)
+                    original_title = '<p style="font-family:prometo trial; color:white; font-size: 20px; font-weight: bold; ">INDEX saved in: {index}</p>'.format(index=index)
+                    st.markdown(original_title, unsafe_allow_html=True)
+            else:
+                save_index = st.text_input(label="Save INDEX by Name",
+                                           placeholder='Enter name of INDEX here...',
+                                           max_chars=50,
+                                           key='SaveIndex',
+                                           on_change=SaveIndex
+                                           )
+
 
     st.session_state["uploaded_files"] = uploaded_file
 
-    #if st.session_state["file_uploader_key"] == 1:
-    #    st.session_state["file_uploader_key"] = 0
-
-    with st.expander(label=":blue[Custom Instructions]", expanded=False):
+    with st.expander(label="Custom Instructions", expanded=False):
         personal_inst = st.text_area("What would you like GAIA to know about you to provide better responses?" , max_chars=2000)
         chracter_inst = st.text_area("How would you like GAIA to respond?", max_chars=2000)
-    
+
     #username = getpass.getuser()
     ip = getip.get_remote_ip()
     if type(ip) == str:
@@ -446,16 +461,17 @@ with st.sidebar:
     else:
         username = 'root'
 
-    creativity_inst = st.select_slider(':blue[Creativity]', options=['Precise', 'Balanced', 'Creative'])
-    prev_topics = gaia_api.prev_topics
+    gaia_utils.UserIP = ip
+    gaia_utils.UserID = username
+    creativity_inst = st.select_slider('Creativity', options=['Precise', 'Balanced', 'Creative'])
+    prev_topics = gaia_api.prev_topics[model_sel].get(username, [])
     if len(prev_topics) > 0:
         original_title = '<p style="font-family:prometo trial; color:white; font-size: 20px; font-weight: bold; ">Previous Chats</p>'
         #st.markdown(original_title, unsafe_allow_html=True)
         st.header(f':gray[_Previous Chats_] of {username}', divider='green')
-        #prev_topics = gaia_api.get_chat_titles()
-        st.selectbox(':blue[Previous Chats]', prev_topics)
-    label = ":black[Start New Chat]"    # colors: blue, green, orange, red, violet, gray/grey, rainbow.
-    new_chat_press = st.button(label=label, type="primary", on_click=click_button, key='new_chat',use_container_width=True)
+        st.selectbox('', prev_topics)
+        label = ":black[Start New Chat]"    # colors: blue, green, orange, red, violet, gray/grey, rainbow.
+        new_chat_press = st.button(label=label, type="primary", on_click=click_button, key='new_chat',use_container_width=True)
     
     # Add CSS styles to control the width of the sidebar
     st.markdown(
@@ -480,9 +496,10 @@ set_png_as_page_bg('Gaia_Watermark.png')
 #st.image(image)
 # Set background color
 
-original_title = '<p style="font-family:prometo trial; color:#0790e6; font-size: 20px; font-weight: bold; ">Hello, my name is GAIA</p>'
+original_title = '<p style="font-family:prometo trial; color:#0790e6; font-size: 20px; font-weight: bold; ">Hi, my name is GAIA</p>'
 st.markdown(original_title, unsafe_allow_html=True)
 
+max_tokens = 1024
 # title message
 if model_sel == "AURA":
     #st.title("I am your project's expert - ask me anything...")
@@ -499,22 +516,19 @@ elif model_sel == "Llama-2":
     title = "Ask me anything you want"
     original_title = '<p style="font-family:prometo trial; color:Black; font-size:40px; font-weight:bold; ">Ask me anything you want</p>'
     st.markdown(original_title, unsafe_allow_html=True)
+    max_tokens = 1024
 elif model_sel == "WizardCoder":
     #st.title("Let's write great code together...")
     title = "Let's write great code together..."
     original_title = '<p style="font-family:prometo trial; color:Black; font-size: 40px; font-weight: bold; ">Lets write great code together...</p>'
     st.markdown(original_title, unsafe_allow_html=True)
+    max_tokens = 4000
 # chat prompt
 
-prompt = st.chat_input(placeholder="Enter your message here...", max_chars=2000)
+#prompt = st.chat_input(placeholder="Enter your message here...", max_chars=2000)
 
 if prompt:
-    gaia_api.prev_topics.append(prompt)
-
-#background_color = "<style>body {background-color: #303a2f;}</style>"
-#st.markdown(background_color, unsafe_allow_html=True)
-
-#new_topic = st.button('New Topic', key='new_topic',use_container_width=False)
+    mylst = gaia_api.prev_topics[model_sel].get(username, [])
 
 # app logic section
 #######################################
@@ -530,8 +544,6 @@ if "messages" not in st.session_state:
     #st.chat_message("assistant").write("How can I help you today?")
 
 # fill the messages list in the screen
-#for msg in st.session_state.messages:
-#    st.chat_message(msg["role"]).write(msg["content"])
 if len(st.session_state.messages) > 0:
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
@@ -540,6 +552,7 @@ i = 0
 
 myflag = gaia_utils.OnesGreetingFlag.get(username, time.time() - (24 * _1_HOUR))
 if (time.time() - myflag) >= (12 * _1_HOUR):
+    md.InitDB()
     for file in os.listdir(DataPath):
         os.remove(DataPath + '//' + file)
     for file in os.listdir('VDB'):
@@ -554,6 +567,7 @@ if (time.time() - myflag) >= (12 * _1_HOUR):
 if prompt:
     # add all previous messages to the prompt
     pre_prompt = st.session_state.messages
+    score = -1
 
     # verify we are using the correct model now
     if model_URI:
@@ -572,10 +586,16 @@ if prompt:
 
     # if we need - add context to the prompt using the retriever engine
     if uploaded_file and ("retriever_engine" in st.session_state.keys()):
+        myprompt = "Look in the document for the most appropriate and closest answer to my question: " + prompt
+        st.session_state.retriever_engine.similarity_top_k = 100     # quantity of nodes to getting
         nodes = st.session_state.retriever_engine.retrieve(prompt)
+        for n in nodes:
+            myscore = n.score
+            print('node with score: ' + str(round(myscore, 2)))
         context = "context: "
         # TODO: use the best nodes to get the context
         context = context + nodes[0].text
+        score = nodes[0].score
         context_prompt = 'Use the following pieces of information to answer the user\'s question.\n' + \
                          'If you don\'t know the answer, just say that you don\'t know, don\'t try to make up an answer.\n' + \
                          'Context: ' + context + '\n' + \
@@ -589,6 +609,7 @@ if prompt:
             context = "context: "
             # TODO: use the best nodes to get the context
             context = context + nodes[0].text
+            score = nodes[0].score
             context_prompt = 'Use the following pieces of information to answer the user\'s question.\n' + \
                              'If you don\'t know the answer, just say that you don\'t know, don\'t try to make up an answer.\n' + \
                              'Context: ' + context + '\n' + \
@@ -597,22 +618,27 @@ if prompt:
                              'Helpful answer:'
             #context_prompt = "Answer my question using the provided context.\n" + context + "\nmy question: " + prompt
             pre_prompt.append({"role": "user", "content": context_prompt})
+            #pre_prompt.append({"role": "user", "content": prompt})
     else:
         pre_prompt.append({"role": "user", "content": prompt})
 
     # TODO: use tiktoken to clip the messages until the number of tokens is less than 2000
     # check the size of each messages from the newest to the oldest
     sum_tokens = 0
-    for msg in reversed(pre_prompt):
+    temp_prompt = pre_prompt.copy()
+    #for msg in reversed(pre_prompt):
+    for msg in reversed(temp_prompt):
         if sum_tokens <= 1200:
             num_tokens = gaia_utils.num_tokens_from_string(msg["content"], "cl100k_base")
             sum_tokens+=num_tokens
             print('num token: ' + str(num_tokens) + ' | sum token: ' + str(sum_tokens))
         if sum_tokens > 1200:
             # remove the message from the dict 
-            pre_prompt.remove(msg)
+            #pre_prompt.remove(msg)
+            temp_prompt.remove(msg)
 
-    full_prompt = gaia_utils.llama_v2_prompt(pre_prompt)
+    #full_prompt = gaia_utils.llama_v2_prompt(pre_prompt)
+    full_prompt = gaia_utils.llama_v2_prompt(temp_prompt)
     print(full_prompt)
 
     # now fill the message into the chat history above
@@ -625,31 +651,44 @@ if prompt:
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
-
+        temp = 0.5
+        if creativity_inst == 'Precise': temp = 0.1
+        elif creativity_inst == 'Creative': temp = 0.9
         # send to the TGI server
         try:
-            for token in client.text_generation(full_prompt, temperature=0.5, max_new_tokens=1024, stream=True):
+            for token in client.text_generation(full_prompt, temperature=temp, max_new_tokens=max_tokens, stream=True):
                 full_response += token
                 message_placeholder.markdown(full_response + "▌")
                 # print(token)
             # add everything besides the last EOS token
-            message_placeholder.markdown(full_response[:-4])
+            full_response = full_response[:-4]
+            message_placeholder.markdown(full_response)
         except:
             DataIsCorrectly = False
             print('failed to get data from server')
 
     if DataIsCorrectly:
-        #i += 1
-        feedback = streamlit_feedback(
-            feedback_type="thumbs",
-            optional_text_label="[Optional] Please provide an explanation",
-            #key=str(i),
-            key='1',
-            on_submit=_submit_feedback
-            # on_submit=gaia_api.provide_feedback
-        )
-        if feedback:
-            print('feedback')
+        st.session_state["feedback_key"] += 1
 
     # add the model reply to the list of messages
+    print('Best score for answer: ' + str(round(score, 2)))
+    gaia_utils.Prompt[username] = prompt
+    gaia_utils.FullResponce[username] = full_response
+    st.session_state.messages[len(st.session_state.messages) - 1] = {"role": "user", "content": prompt}
     st.session_state.messages.append({"role": "assistant", "content": full_response})
+    dev = {
+        "Date": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "Question": str(gaia_utils.Prompt.get(gaia_utils.UserID, 'None')),
+        "Answer": str(gaia_utils.FullResponce.get(gaia_utils.UserID, 'None')),
+    }
+    #md.InsertToDB(md.COLLECTION_HISTORY, dev, model_sel)
+    md.InsertToDB(md.COLLECTION_HISTORY, gaia_utils.MsgHistoryByModel[model_sel], model_sel)
+
+if st.session_state.get("feedback_key"):
+    feedback_option = "faces" if st.toggle(label="Thumbs ⇄ Faces", value=False) else "thumbs"
+    feedback = streamlit_feedback(
+        feedback_type=feedback_option,
+        optional_text_label="[Optional] Please provide an explanation",
+        key=str(st.session_state["feedback_key"]),
+        on_submit=gaia_api.provide_feedback
+    )
