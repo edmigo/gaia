@@ -455,11 +455,15 @@ with st.sidebar:
         chracter_inst = st.text_area("How would you like GAIA to respond?", max_chars=2000)
 
     #username = getpass.getuser()
-    ip = getip.get_remote_ip()
-    if type(ip) == str:
-        username = getip.GetUserName(ip)
-    else:
-        username = 'root'
+    try:
+        ip = getip.get_remote_ip()
+        if type(ip) == str:
+            username = getip.GetUserName(ip)
+        else:
+            username = 'root'
+    except Exception as ex:
+        ip = '1'
+        username = 'admin'
 
     gaia_utils.UserIP = ip
     gaia_utils.UserID = username
